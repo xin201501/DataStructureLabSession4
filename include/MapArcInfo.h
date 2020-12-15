@@ -7,7 +7,7 @@ private:
     size_t price;
 
 public:
-    explicit MapArcInfo(size_t distance, size_t price) : distance(distance), price(price) {}
+    explicit MapArcInfo(size_t distance = 0, size_t price = 0) : distance(distance), price(price) {}
     [[nodiscard]] size_t getDistance() const {
         return distance;
     }
@@ -19,5 +19,11 @@ public:
     }
     void setPrice(size_t price_) {
         price = price_;
+    }
+    bool operator==(const MapArcInfo &another) const {
+        return distance == another.distance && price == another.price;
+    }
+    bool operator!=(const MapArcInfo &another) const {
+        return !(*this == another);
     }
 };

@@ -4,14 +4,14 @@
 #include <concepts>
 #include <iterator>
 #include <utility>
-template<std::equality_comparable>
+template<std::equality_comparable, std::copy_constructible>
 class AdjacencyListGraph;
-template<std::equality_comparable T>
-class ConstArcNodeIterator : public std::iterator<std::forward_iterator_tag, ArcNode<T>> {
-    friend class AdjacencyListGraph<T>;
+template<std::equality_comparable T, std::copy_constructible U>
+class ConstArcNodeIterator : public std::iterator<std::forward_iterator_tag, ArcNode<T, U>> {
+    friend class AdjacencyListGraph<T, U>;
 
 protected:
-    ArcNode<T> *current;
+    ArcNode<T, U> *current;
     void ensureNotOperatingAnEndIterator() {
         if (current == nullptr) {
             throw std::logic_error("Cannot dereference an end pointer!");
@@ -19,24 +19,25 @@ protected:
     }
 
 public:
-    explicit ConstArcNodeIterator(VertexNode<T> *vertex) : current(vertex->first) {}
-    explicit ConstArcNodeIterator(VertexNode<T> &vertex) : current(vertex.first) {}
-    explicit ConstArcNodeIterator(ArcNode<T> *current = nullptr) : current(current) {}
-    explicit ConstArcNodeIterator(ArcNode<T> &node) : current(node.next) {}
+    explicit ConstArcNodeIterator() : current(nullptr) {}
+    explicit ConstArcNodeIterator(VertexNode<T, U> *vertex) : current(vertex->first) {}
+    explicit ConstArcNodeIterator(VertexNode<T, U> &vertex) : current(vertex.first) {}
+    explicit ConstArcNodeIterator(ArcNode<T, U> *current) : current(current) {}
+    explicit ConstArcNodeIterator(ArcNode<T, U> &node) : current(node.next) {}
     bool operator==(const ConstArcNodeIterator &another) const {
         return current == another.current;
     }
     bool operator!=(const ConstArcNodeIterator &another) const {
         return !(*this == another);
     }
-    const ArcNode<T> &operator*() {
+    const ArcNode<T, U> &operator*() {
         ensureNotOperatingAnEndIterator();
         return *current;
     }
-    const ArcNode<T> *operator->() {
+    const ArcNode<T, U> *operator->() {
         return current;
     }
-    const ArcNode<T> *data() {
+    const ArcNode<T, U> *data() {
         return current;
     }
     ConstArcNodeIterator &operator++() {
@@ -49,5 +50,9 @@ public:
         ConstArcNodeIterator it = *this;
         ++*this;
         return it;
+    }
+    ConstArcNodeIterator next() {
+        ensureNotOperatingAnEndIterator();
+        return {current->next};
     }
 };

@@ -1,8 +1,9 @@
 #include "MapArcInfo.h"
-#include "adjacencylistgraph/AdjacencyListGraph.h"
+#include "adjacencylistgraphfactory/MapAdjacencyListGraphFactory.h"
+#include <iostream>
 int main() {
-    AdjacencyListGraph<int> graph;
-    graph.firstNeighborIterator(1);
-    graph.afterLastNeighborIterator();
-    graph.removeEdge(1, 3);
+    system("chcp 65001");
+    MapAdjacencyListGraphFactory factory;
+    auto cityMap = factory.getBean();
+    std::cout << "test ended" << std::endl;
 }

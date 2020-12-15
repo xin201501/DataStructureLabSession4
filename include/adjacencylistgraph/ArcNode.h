@@ -2,11 +2,11 @@
 #include "ArcInfo.h"
 #include "VertexNode.h"
 #include <concepts>
-template<typename>
+template<std::equality_comparable, std::copy_constructible>
 struct VertexNode;
-template<typename T>
+template<std::equality_comparable T, std::copy_constructible U>
 struct ArcNode {
-    VertexNode<T> *adjVexPosition;
-    ArcInfo *arcInfo;
+    VertexNode<T, U> *adjVexPosition;
+    U arcInfo;
     ArcNode *next;
 };

@@ -1,10 +1,10 @@
 #pragma once
 #include "ArcNode.h"
 #include <concepts>
-template<typename>
+template<std::equality_comparable, std::copy_constructible>
 struct ArcNode;
-template<typename T>
+template<std::equality_comparable T, std::copy_constructible U>
 struct VertexNode {
     T info;
-    ArcNode<T> *first = nullptr;
+    ArcNode<T, U> *first = nullptr;
 };
