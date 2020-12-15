@@ -1,5 +1,4 @@
 #pragma once
 struct ArcInfo {
-protected:
-    ArcInfo() = default;
+    virtual ~ArcInfo() = default;
 };

@@ -19,8 +19,10 @@ protected:
     }
 
 public:
-    ConstArcNodeIterator(ArcNode<T> *current = nullptr) : current(current) {}
-    ConstArcNodeIterator(ArcNode<T> &node) : current(node.next) {}
+    explicit ConstArcNodeIterator(VertexNode<T> *vertex) : current(vertex->first) {}
+    explicit ConstArcNodeIterator(VertexNode<T> &vertex) : current(vertex.first) {}
+    explicit ConstArcNodeIterator(ArcNode<T> *current = nullptr) : current(current) {}
+    explicit ConstArcNodeIterator(ArcNode<T> &node) : current(node.next) {}
     bool operator==(const ConstArcNodeIterator &another) const {
         return current == another.current;
     }
@@ -32,6 +34,9 @@ public:
         return *current;
     }
     const ArcNode<T> *operator->() {
+        return current;
+    }
+    const ArcNode<T> *data() {
         return current;
     }
     ConstArcNodeIterator &operator++() {

@@ -2,7 +2,7 @@
 #include "adjacencylistgraph/AdjacencyListGraph.h"
 int main() {
     AdjacencyListGraph<int> graph;
-    graph.getAdjacencyNodesEndIterator();
-    graph.getConstAdjacencyNodesEndIterator();
+    graph.firstNeighborIterator(1);
+    graph.afterLastNeighborIterator();
     graph.removeEdge(1, 3);
 }

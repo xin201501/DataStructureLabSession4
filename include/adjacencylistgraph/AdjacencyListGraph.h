@@ -30,12 +30,9 @@ private:
     size_t arcNum;
     VertexNodePtr locateVertex(const T &x) {
         auto mapPosition = vertexPosition.find(x);
-        if (mapPosition == vertexPosition.cend()) {
-            return nullptr;
-        }
-        return mapPosition->second;
+        return mapPosition == vertexPosition.cend() ? nullptr : mapPosition->second;
     }
-    auto locateVertex(const T &x) const {
+    const VertexNodePtr locateVertex(const T &x) const {
         return const_cast<AdjacencyListGraph *>(this)->locateVertex();
     }
     bool containsVertex(const T &x) const {
@@ -43,30 +40,36 @@ private:
     }
 
 public:
-    explicit AdjacencyListGraph(const std::list<VertexNodeType> &vertices, size_t vexNum = 0, size_t arcNum = 0)
+    [[maybe_unused]] explicit AdjacencyListGraph(const std::list<VertexNodeType> &vertices, size_t vexNum = 0, size_t arcNum = 0)
         : vertices(vertices), vexNum(vexNum), arcNum(arcNum) {}
-    explicit AdjacencyListGraph(std::list<VertexNodeType> &&vertices = {}, size_t vexNum = 0, size_t arcNum = 0) : vertices(std::move(vertices)), vexNum(vexNum), arcNum(arcNum) {}
+    [[maybe_unused]] explicit AdjacencyListGraph(std::list<VertexNodeType> &&vertices = {}, size_t vexNum = 0, size_t arcNum = 0) : vertices(std::move(vertices)), vexNum(vexNum), arcNum(arcNum) {}
     AdjacencyListGraph(const AdjacencyListGraph &another) = default;
     AdjacencyListGraph(AdjacencyListGraph &&another) noexcept : vertices(std::move(another.vertices)), vexNum(another.vexNum), arcNum(another.vexNum) {}
-    ConstArcNodeIterator<T> getConstAdjacencyNodesIteratorOfAVertex(const T &x) {
+    auto constFirstNeighborIterator(const T &x) {
         auto xPosition = locateVertex(x);
-        return xPosition ? ConstArcNodeIterator(xPosition->first) : ConstArcNodeIterator<T>(nullptr);
+        return xPosition ? ConstArcNodeIterator<T>(xPosition) : ConstArcNodeIterator<T>(nullptr);
     }
-    ConstArcNodeIterator<T> getConstAdjacencyNodesIteratorOfAVertex(const VertexNode<T> &x) {
-        return {x.first};
+    auto constFirstNeighborIterator(const VertexNode<T> &x) {
+        return ConstArcNodeIterator<T>{x.first};
     }
-    ConstArcNodeIterator<T> getConstAdjacencyNodesEndIterator() {
-        return {};
+    auto constFirstNeighborIterator(const VertexNode<T> *x) {
+        return ConstArcNodeIterator<T>{x->first};
     }
-    ArcNodeIterator<T> getAdjacencyNodesIteratorOfAVertex(const T &x) {
+    auto constAfterLastNeighborIterator() {
+        return ConstArcNodeIterator<T>{};
+    }
+    auto firstNeighborIterator(const T &x) {
         auto xPosition = locateVertex(x);
-        return xPosition ? ArcNodeIterator(xPosition->first) : ArcNodeIterator<T>(nullptr);
+        return xPosition ? ArcNodeIterator<T>(xPosition) : ArcNodeIterator<T>();
     }
-    ArcNodeIterator<T> getAdjacencyNodesIteratorOfAVertex(VertexNode<T> &x) {
-        return {x.first};
+    auto firstNeighborIterator(VertexNode<T> &x) {
+        return ArcNodeIterator<T>{x.first};
     }
-    ArcNodeIterator<T> getAdjacencyNodesEndIterator() {
-        return {};
+    auto firstNeighborIterator(VertexNode<T> *x) {
+        return ArcNodeIterator<T>{x->first};
+    }
+    auto afterLastNeighborIterator() {
+        return ArcNodeIterator<T>{};
     }
     bool isAdjacent(const T &x, const T &y) const {
         auto xPosition = locateVertex(x);
@@ -113,13 +116,14 @@ public:
             tmp = firstAdjacencyVertex->next;
             delete firstAdjacencyVertex;
             firstAdjacencyVertex = tmp;
+            arcNum--;
         }
         vertices.erase(vertexPosition);
         vertexPosition.erase(vertex);
         return true;
     }
 
-    void addEdge(const T &x, const T &y) {
+    void addEdge(const T &x, const T &y, ArcInfo *arcInfo = nullptr) {
         auto xPosition = locateVertex(x), yPosition = locateVertex(y);
         if (!xPosition) {
             auto [insertPosition, dummy] = vertices.insert({x, nullptr});
@@ -134,23 +138,62 @@ public:
             return;
         }
         ArcNodeTypePtr xNodePointer = vertexPosition[x];
-        ArcNodeTypePtr newArcNode = new ArcNode{.adjVexPosition = xNodePointer, .next = xNodePointer->next};
+        ArcNodeTypePtr newArcNode = new ArcNode{xNodePointer, arcInfo, xNodePointer->next};
         xNodePointer->next = newArcNode;
+        arcNum++;
     }
     bool removeEdge(const T &x, const T &y) {
-        auto xPosition = locateVertex(x), yPosition = locateVertex(y);
-        if (!xPosition || !yPosition) {
+        auto xLocation = locateVertex(x), yLocation = locateVertex(y);
+        if (!xLocation || !yLocation) {
             return false;
         }
-        for (auto begin = getAdjacencyNodesIteratorOfAVertex(*xPosition), end = getAdjacencyNodesEndIterator(), pre = end;
-             begin != end; pre = begin, begin++) {
-            if (begin->adjVexPosition == yPosition) {
-                auto tmp = &*begin;
-                pre->next = begin->next;
-                delete tmp;
+        for (auto it = firstNeighborIterator(xLocation), tmp = it, end = afterLastNeighborIterator(); it != end; it++) {
+            if (it->adjVexPosition == yLocation) {
+                tmp->next = it->next;
+                delete it.data();
+                arcNum--;
                 return true;
             }
         }
         return false;
+    }
+    ArcInfo *getEdgeValue(const T &x, const T &y) {
+        auto xLocation = locateVertex(x), yLocation = locateVertex(y);
+        if (!x || !y) {
+            return nullptr;
+        }
+        for (auto it = constFirstNeighborIterator(xLocation), end = constAfterLastNeighborIterator(); it != end; it++) {
+            if (it->adjVexPosition == yLocation) {
+                return it->arcInfo;
+            }
+        }
+        return nullptr;
+    }
+    template<typename... Args>
+    void setEdgeValue(const T &x, const T &y, Args... newInfos) {
+        auto xLocation = locateVertex(x), yLocation = locateVertex(y);
+        if (!x || !y) {
+            return;
+        }
+        for (auto it = firstNeighborIterator(xLocation), end = afterLastNeighborIterator(); it != end; it++) {
+            if (it->adjVexPosition == yLocation) {
+                ArcInfo *oldInfo = it->arcInfo;
+                it->arcInfo = new auto {std::forward<Args>(newInfos)...};
+                delete oldInfo;
+            }
+        }
+    }
+    void setEdgeValue(const T &x, const T &y, ArcInfo *newInfo) {
+        auto xLocation = locateVertex(x), yLocation = locateVertex(y);
+        if (!x || !y) {
+            return;
+        }
+        for (auto it = firstNeighborIterator(xLocation), end = afterLastNeighborIterator(); it != end; it++) {
+            if (it->adjVexPosition == yLocation) {
+                ArcInfo *oldInfo = it->arcInfo;
+                it->arcInfo = newInfo;
+                delete oldInfo;
+            }
+        }
     }
 };

@@ -14,11 +14,16 @@ class ArcNodeIterator : public ConstArcNodeIterator<T> {
     friend class AdjacencyListGraph<T>;
 
 public:
+    using ConstArcNodeIterator<T>::ConstArcNodeIterator;
+    ArcNodeIterator(const ArcNodeIterator &) = default;
     ArcNode<T> &operator*() {
         this->ensureNotOperatingAnEndIterator();
         return *this->current;
     }
     ArcNode<T> *operator->() {
+        return this->current;
+    }
+    ArcNode<T> *data() {
         return this->current;
     }
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "ArcNode.h"
+#include <concepts>
 template<typename>
 struct ArcNode;
 template<typename T>
