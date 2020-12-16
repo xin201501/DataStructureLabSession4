@@ -8,9 +8,9 @@
 #include <tuple>
 class MapAdjacencyListGraphFactory {
 private:
-    inline static std::string defaultFilename = "services.txt";
+    inline static const char *defaultFilename = "services.txt";
     std::ifstream fileReader;
-    std::tuple<std::string, std::string, size_t, size_t> splitLine(std::string_view line) {
+    static std::tuple<std::string, std::string, size_t, size_t> splitLine(std::string_view line) {
         auto firstSplitPoint = line.find_first_of(' '), secondSplitPoint = line.find_first_of(' ', firstSplitPoint + 1),
              thirdSplitPoint = line.find_last_of(' ');
         if ((firstSplitPoint | secondSplitPoint | thirdSplitPoint) == std::string::npos) {

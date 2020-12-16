@@ -30,14 +30,13 @@ private:
     size_t vexNum;
     size_t arcNum;
     VertexNodePtr locateVertex(const T &x) {
-        auto mapPosition = vertexPosition.find(x);
-        return mapPosition == vertexPosition.cend() ? nullptr : mapPosition->second;
+        return vertexPosition.contains(x) ? vertexPosition[x] : nullptr;
     }
     const VertexNodePtr locateVertex(const T &x) const {
         return const_cast<AdjacencyListGraph *>(this)->locateVertex(x);
     }
     bool containsVertex(const T &x) const {
-        return locateVertex(x) == nullptr;
+        return locateVertex(x) != nullptr;
     }
 
 public:
@@ -107,7 +106,9 @@ public:
             return false;
         }
         vertices.push_front(VertexNode<T, U>{newVertex, nullptr});
-        return vertexPosition.insert({newVertex, &vertices.front()}).second;
+        vertexPosition[newVertex] = &vertices.front();
+        vexNum++;
+        return true;
     }
     bool deleteVertex(const T &vertex) {
         auto vertexPointer = locateVertex(vertex);
